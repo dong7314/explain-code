@@ -31,6 +31,22 @@ spec:
                 name: {{ include "explain-code.fullname" . }}-backend-config
             - secretRef:
                 name: {{ include "explain-code.fullname" . }}-backend-secret
+          {{- if .Values.postgres.enabled }}
+          env:
+            {{- include "explain-code.internalDatabaseEnv" . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
 {{- end }}

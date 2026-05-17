@@ -48,8 +48,10 @@ type SeedPost = {
   views: number;
 };
 
+const seedAdminUsername = config.seedAdminUsername;
+
 const users: SeedUser[] = [
-  { username: config.seedAdminUsername, displayName: "mirae.dev", role: "admin" },
+  { username: seedAdminUsername, displayName: seedAdminUsername, role: "admin" },
   { username: "server-sideup" },
   { username: "ng2react" },
   { username: "pipeline-lab" },
@@ -69,7 +71,7 @@ const groups: SeedGroup[] = [
     goal: "주문 폼, 체결 내역, 토큰 인증 흐름을 React와 NestJS 기준으로 설명합니다.",
     explainTarget: "프론트엔드 훅과 API 호출 흐름",
     frameworks: ["React", "TanStack Query", "NestJS"],
-    owner: "mirae.dev",
+    owner: seedAdminUsername,
   },
   {
     id: "legacy-angular-web",
@@ -96,7 +98,7 @@ const groups: SeedGroup[] = [
     goal: "AI가 남긴 리뷰 코멘트를 게시글, 댓글, 상태 변경 흐름으로 연결해 설명합니다.",
     explainTarget: "게시판 상태, 댓글 등록, 리뷰 상태 흐름",
     frameworks: ["Next.js", "React", "Prisma"],
-    owner: "mirae.dev",
+    owner: seedAdminUsername,
   },
   {
     id: "onboarding-playbook",
@@ -105,7 +107,7 @@ const groups: SeedGroup[] = [
     goal: "AI가 생성한 학습 글을 팀 온보딩 문서와 체크리스트로 연결하는 방법을 설명합니다.",
     explainTarget: "문서 구조, 체크리스트 저장, 진행률 계산",
     frameworks: ["React", "Supabase", "Edge Functions"],
-    owner: "mirae.dev",
+    owner: seedAdminUsername,
   },
   {
     id: "token-vault-admin",
@@ -114,7 +116,7 @@ const groups: SeedGroup[] = [
     goal: "API 토큰 생성, 만료, 권한 범위를 관리자 화면에서 다루는 흐름을 설명합니다.",
     explainTarget: "토큰 발급 UI, 권한 스코프, 만료 처리",
     frameworks: ["React", "NestJS", "PostgreSQL"],
-    owner: "mirae.dev",
+    owner: seedAdminUsername,
   },
   {
     id: "chart-render-lab",
@@ -296,7 +298,7 @@ const posts: SeedPost[] = [
       "useEffect 대신 useMemo로 바꾼 이유를 학습 글에 어떻게 설명하면 좋을까요?",
     excerpt:
       "Codex가 주문 요약 계산을 useMemo로 분리했는데, 의존성 배열과 렌더링 비용 관점에서 초보자에게 설명하는 흐름이 궁금합니다.",
-    author: "mirae.dev",
+    author: seedAdminUsername,
     repo: "coin-trade",
     comments: 8,
     likes: 14,
@@ -580,7 +582,7 @@ const run = async () => {
               },
             ],
           },
-          userIds.get(groups.find((group) => group.id === episode.groupId)?.owner ?? "mirae.dev"),
+          userIds.get(groups.find((group) => group.id === episode.groupId)?.owner ?? seedAdminUsername),
           episode.likes,
           episode.dislikes,
           episode.comments,
@@ -645,7 +647,7 @@ const run = async () => {
           INSERT INTO project_group_favorites (user_id, group_id)
           VALUES ($1, $2)
         `,
-        [userIds.get("mirae.dev"), groupId],
+        [userIds.get(seedAdminUsername), groupId],
       );
     }
 
@@ -656,7 +658,7 @@ const run = async () => {
           ('post', 101, $1, '핵심 흐름이 먼저 나오니까 훨씬 따라가기 쉽네요.'),
           ('post', 101, $2, '초보자용 용어 설명도 한 줄 더 있으면 좋겠습니다.')
       `,
-      [userIds.get("mirae.dev"), userIds.get("reader.log")],
+      [userIds.get(seedAdminUsername), userIds.get("reader.log")],
     );
 
     await client.query(
@@ -678,7 +680,7 @@ const run = async () => {
           ('episode', 'coin-trade', 'coin-1', $1, '막혔던 부분이나 추가 설명이 필요한 개념을 남길 수 있습니다.'),
           ('episode', 'coin-trade', 'coin-1', $2, '조사한 용어 설명도 한 줄 더 있으면 좋겠습니다.')
       `,
-      [userIds.get("mirae.dev"), userIds.get("reader.log")],
+      [userIds.get(seedAdminUsername), userIds.get("reader.log")],
     );
 
     for (const [index, item] of popularNotifications.entries()) {
@@ -689,7 +691,7 @@ const run = async () => {
           VALUES ($1, 'popular', '오늘의 인기글에 올랐어요', $2, $3)
         `,
         [
-          userIds.get("mirae.dev"),
+          userIds.get(seedAdminUsername),
           `"${title}" 글이 오늘의 인기글 ${index + 1}위에 올랐습니다.`,
           href,
         ],
@@ -705,7 +707,7 @@ const run = async () => {
           ($1, 'milestone', '조회수 마일스톤을 달성했어요', '커뮤니티 글 조회수가 500회를 넘었습니다.', '/community/201'),
           ($1, 'token', 'API 토큰 만료 알림', 'API 토큰 만료까지 7일 남았습니다.', '/integrations')
       `,
-      [userIds.get("mirae.dev")],
+      [userIds.get(seedAdminUsername)],
     );
   });
 

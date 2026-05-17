@@ -1,4 +1,5 @@
 {{- if .Values.ingress.enabled }}
+{{- $host := include "explain-code.publicHost" . }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -13,16 +14,23 @@ spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- if .Values.ingress.tls.enabled }}
   tls:
-    {{- toYaml .Values.ingress.tls | nindent 4 }}
+    - hosts:
+        {{- if .Values.ingress.tls.hosts }}
+        {{- range .Values.ingress.tls.hosts }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ $host | quote }}
+        {{- end }}
+      secretName: {{ .Values.ingress.tls.secretName | quote }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ $host | quote }}
       http:
         paths:
-          {{- range .paths }}
+          {{- range .Values.ingress.paths }}
           - path: {{ .path }}
             pathType: {{ .pathType }}
             backend:
@@ -31,5 +39,4 @@ spec:
                 port:
                   name: http
           {{- end }}
-    {{- end }}
 {{- end }}

@@ -32,7 +32,7 @@ export const config = {
   },
   jwtSecret: pick(process.env.JWT_SECRET, "local-dev-jwt-secret-change-me"),
   tokenPepper: pick(process.env.TOKEN_PEPPER, "local-dev-token-pepper-change-me"),
-  seedAdminUsername: pick(process.env.SEED_ADMIN_USERNAME, "mirae.dev"),
+  seedAdminUsername: pick(process.env.SEED_ADMIN_USERNAME, "admin"),
   seedAdminPassword: pick(process.env.SEED_ADMIN_PASSWORD, "explain-code-demo"),
 };
 

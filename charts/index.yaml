@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  explain-code:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2026-05-17T15:34:27.445274268Z"
+    description: ExplainCode frontend and backend deployment chart.
+    digest: 3338e6b8cb6d450ac67e60ba5dc6dc3043e4166ea724103074e8370b4729ab74
+    name: explain-code
+    type: application
+    urls:
+    - https://raw.githubusercontent.com/dong7314/explain-code/master/charts/explain-code-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-05-17T15:34:27.441286415Z"

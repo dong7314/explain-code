@@ -8,6 +8,10 @@ metadata:
     app.kubernetes.io/component: backend
 data:
   {{- range $key, $value := .Values.backend.config }}
+  {{- if and (eq $key "CORS_ORIGIN") (not $value) (include "explain-code.publicUrl" $) }}
+  {{ $key }}: {{ include "explain-code.publicUrl" $ | quote }}
+  {{- else }}
   {{ $key }}: {{ $value | quote }}
+  {{- end }}
   {{- end }}
 {{- end }}

@@ -1,0 +1,85 @@
+{{- if and .Values.backend.enabled .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "explain-code.fullname" . }}-backend-migrate
+  labels:
+    {{- include "explain-code.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend-migration
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.migration.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "explain-code.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backend-migration
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "explain-code.fullname" . }}-backend-config
+            - secretRef:
+                name: {{ include "explain-code.fullname" . }}-backend-secret
+          {{- if .Values.postgres.enabled }}
+          env:
+            {{- include "explain-code.internalDatabaseEnv" . | nindent 12 }}
+          {{- end }}
+          command:
+            - sh
+            - -c
+            - |
+              node <<'NODE'
+              const net = require("node:net");
+
+              const host = process.env.PGHOST || "localhost";
+              const port = Number(process.env.PGPORT || 5432);
+              let attempts = 0;
+
+              const tryConnect = () =>
+                new Promise((resolve, reject) => {
+                  const socket = net.createConnection({ host, port }, () => {
+                    socket.end();
+                    resolve();
+                  });
+
+                  socket.setTimeout(2000, () => {
+                    socket.destroy(new Error("connection timeout"));
+                  });
+                  socket.on("error", reject);
+                });
+
+              const sleep = (ms) =>
+                new Promise((resolve) => setTimeout(resolve, ms));
+
+              (async () => {
+                while (attempts < 60) {
+                  try {
+                    await tryConnect();
+                    console.log(`Database is reachable at ${host}:${port}`);
+                    return;
+                  } catch (error) {
+                    attempts += 1;
+                    console.log(`Waiting for database ${host}:${port} (${attempts}/60)`);
+                    await sleep(2000);
+                  }
+                }
+
+                throw new Error(`Database was not reachable at ${host}:${port}`);
+              })().catch((error) => {
+                console.error(error);
+                process.exit(1);
+              });
+              NODE
+
+              node dist/db/migrate.js
+              {{ if .Values.migration.seed }}
+              node dist/db/seed.js
+              {{ end }}
+{{- end }}

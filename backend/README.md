@@ -43,7 +43,7 @@ http://localhost:4000/api
 Seeded demo login:
 
 ```text
-mirae.dev / explain-code-demo
+admin / explain-code-demo
 ```
 
 `npm run db:seed` resets the development tables and inserts frontend-compatible mock data.

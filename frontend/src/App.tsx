@@ -5433,29 +5433,31 @@ function GlobalSearchModal({
               </div>
             </section>
 
-            <section className="search-discovery-section">
-              <div className="search-section-head">
-                <strong>인기 검색어</strong>
-                <span>실시간 기준</span>
-              </div>
-              <ol className="search-popular-list">
-                {popularSearchTerms.map((term, index) => (
-                  <li key={term.label}>
-                    <button onClick={() => onSubmit(term.label)} type="button">
-                      <span>{index + 1}</span>
-                      <strong>{term.label}</strong>
-                      <em className={term.trend}>
-                        {term.trend === "up"
-                          ? "▲"
-                          : term.trend === "down"
-                            ? "▼"
-                            : "-"}
-                      </em>
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            </section>
+            {popularSearchTerms.length > 0 && (
+              <section className="search-discovery-section">
+                <div className="search-section-head">
+                  <strong>인기 검색어</strong>
+                  <span>실시간 기준</span>
+                </div>
+                <ol className="search-popular-list">
+                  {popularSearchTerms.map((term, index) => (
+                    <li key={term.label}>
+                      <button onClick={() => onSubmit(term.label)} type="button">
+                        <span>{index + 1}</span>
+                        <strong>{term.label}</strong>
+                        <em className={term.trend}>
+                          {term.trend === "up"
+                            ? "▲"
+                            : term.trend === "down"
+                              ? "▼"
+                              : "-"}
+                        </em>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
           </div>
         ) : (
           <div className="search-results-view">

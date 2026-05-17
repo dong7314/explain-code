@@ -1,13 +1,15 @@
 global:
-  env: local
+  env: production
+  publicHost: ""
+  publicUrl: ""
 
 frontend:
   enabled: true
   replicaCount: 1
   image:
-    repository: docker.io/your-dockerhub/explain-code-frontend
+    repository: docker.io/dy7314/explain-code-frontend
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   service:
     type: ClusterIP
     port: 80
@@ -19,12 +21,12 @@ frontend:
   resources: {}
 
 backend:
-  enabled: false
+  enabled: true
   replicaCount: 1
   image:
-    repository: docker.io/your-dockerhub/explain-code-backend
+    repository: docker.io/dy7314/explain-code-backend
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   service:
     type: ClusterIP
     port: 8080
@@ -32,26 +34,56 @@ backend:
   config:
     NODE_ENV: production
     PORT: "4000"
-    CORS_ORIGIN: https://explain-code.local
+    CORS_ORIGIN: ""
     PGHOST: ""
     PGPORT: "5432"
     PGDATABASE: explain_code
     PGUSER: explain_code
-    SEED_ADMIN_USERNAME: mirae.dev
+    SEED_ADMIN_USERNAME: admin
   secret:
     DATABASE_URL: ""
-    JWT_SECRET: ""
-    TOKEN_PEPPER: ""
+    JWT_SECRET: change-this-jwt-secret
+    TOKEN_PEPPER: change-this-token-pepper
     PGPASSWORD: ""
+    SEED_ADMIN_PASSWORD: change-this-admin-password
   resources: {}
 
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  service:
+    port: 5432
+  auth:
+    database: explain_code
+    username: explain_code
+    password: change-this-postgres-password
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: ""
+  resources: {}
+
+migration:
+  enabled: true
+  seed: false
+  backoffLimit: 5
+
 ingress:
-  enabled: false
+  enabled: true
   className: ""
-  hosts:
-    - host: explain-code.local
-      paths:
-        - path: /
-          pathType: Prefix
-          service: frontend
-  tls: []
+  annotations: {}
+  host: explain-code.local
+  paths:
+    - path: /api
+      pathType: Prefix
+      service: backend
+    - path: /
+      pathType: Prefix
+      service: frontend
+  tls:
+    enabled: false
+    secretName: explain-code-tls
+    hosts: []
