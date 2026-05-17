@@ -8,16 +8,31 @@ Create and publish an Explain Code learning episode from the current implementat
 
 ## Environment
 
-Expect these variables:
+Required before publishing:
+
+```bash
+EXPLAIN_CODE_API_TOKEN=expc_live_...
+```
+
+Optional:
 
 ```bash
 EXPLAIN_CODE_API_URL=http://localhost:4000/api
-EXPLAIN_CODE_API_TOKEN=expc_live_...
 EXPLAIN_CODE_GROUP_KEY=coin-trade
-EXPLAIN_CODE_PROJECT_NAME="실시간 코인 거래 대시보드"
+EXPLAIN_CODE_PROJECT_NAME="Real-time coin trading dashboard"
 ```
 
 Never reveal the full token. If `EXPLAIN_CODE_API_TOKEN` is missing, ask the user to set it before publishing.
+
+## Publisher Tool
+
+When this plugin is loaded, use the bundled command:
+
+```bash
+explain-code-publish.mjs
+```
+
+It resolves the project-local publisher first and falls back to the installer-provided publisher under `~/.explain-code`.
 
 ## Workflow
 
@@ -25,7 +40,7 @@ Never reveal the full token. If `EXPLAIN_CODE_API_TOKEN` is missing, ask the use
 2. List existing Explain Code groups:
 
 ```bash
-node tools/explain-code-ingest/publish.mjs --list-groups
+explain-code-publish.mjs --list-groups
 ```
 
 3. Choose `groupKey`:
@@ -40,13 +55,13 @@ node tools/explain-code-ingest/publish.mjs --list-groups
 9. Validate:
 
 ```bash
-node tools/explain-code-ingest/publish.mjs .explain-code/claude-learning-payload.json --dry-run
+explain-code-publish.mjs .explain-code/claude-learning-payload.json --dry-run
 ```
 
 10. Publish:
 
 ```bash
-node tools/explain-code-ingest/publish.mjs .explain-code/claude-learning-payload.json
+explain-code-publish.mjs .explain-code/claude-learning-payload.json
 ```
 
 ## Payload Shape
@@ -56,32 +71,32 @@ Use this shape:
 ```json
 {
   "groupKey": "coin-trade",
-  "projectName": "실시간 코인 거래 대시보드",
-  "title": "TokenGuard가 관리자 토큰을 검증하는 순서",
-  "summary": "API 토큰의 만료, 권한, 접근 가능 그룹을 확인하는 백엔드 흐름을 정리했습니다.",
-  "overview": "이번 변경은 인증 로직을 토큰 파싱, 만료 검증, 권한 확인 순서로 나누어 설명하는 학습 자료입니다.",
+  "projectName": "Real-time coin trading dashboard",
+  "title": "TokenGuard checks admin token access",
+  "summary": "Explains how the backend validates API token expiry, scope, and group access.",
+  "overview": "This learning note explains token parsing, expiration checks, and permission checks as separate backend steps.",
   "frameworks": ["Node", "Express", "PostgreSQL"],
   "concepts": ["API token", "RBAC", "middleware"],
-  "flow": ["헤더에서 토큰 추출", "토큰 해시 조회", "만료와 scope 검증"],
+  "flow": ["Read token from headers", "Lookup token hash", "Validate expiry and scope"],
   "files": [
     {
       "path": "backend/src/middleware/auth.ts",
-      "summary": "API 토큰 인증과 scope 검증을 담당합니다.",
+      "summary": "Handles API token authentication and scope checks.",
       "changeType": "modified"
     }
   ],
   "codeSnippets": [
     {
-      "title": "토큰 헤더 읽기",
+      "title": "Read token header",
       "language": "ts",
-      "description": "AI 도구는 x-api-token 또는 Bearer 토큰으로 인증 정보를 전달합니다.",
+      "description": "AI tools can authenticate with x-api-token or a Bearer token.",
       "code": "const rawToken = request.headers['x-api-token'] ?? getBearerToken(request.headers.authorization);"
     }
   ],
   "syntaxNotes": [
     {
       "name": "middleware",
-      "description": "Express에서 라우터에 도달하기 전 요청을 검사하고 필요한 인증 정보를 request에 붙이는 계층입니다."
+      "description": "Express middleware checks a request before the route handler and attaches validated auth data to the request."
     }
   ],
   "createdBy": "claude"

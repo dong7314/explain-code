@@ -9,6 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const candidates = [
   resolve(process.cwd(), "tools/explain-code-ingest/publish.mjs"),
   resolve(__dirname, "../../../tools/explain-code-ingest/publish.mjs"),
+  resolve(process.env.HOME || "", ".explain-code/tools/explain-code-ingest/publish.mjs"),
+  resolve(process.env.USERPROFILE || "", ".explain-code/tools/explain-code-ingest/publish.mjs"),
 ];
 
 const script = candidates.find((candidate) => existsSync(candidate));

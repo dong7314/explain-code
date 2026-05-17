@@ -7,28 +7,42 @@ description: Publish AI-generated learning episodes to the Explain Code backend.
 
 Create a structured learning episode from the current code work and publish it to the Explain Code backend.
 
-## Required Environment
+## Environment
 
-Use these environment variables:
+Required before publishing:
+
+```bash
+EXPLAIN_CODE_API_TOKEN=expc_live_...
+```
+
+Optional:
 
 ```bash
 EXPLAIN_CODE_API_URL=http://localhost:4000/api
-EXPLAIN_CODE_API_TOKEN=expc_live_...
 EXPLAIN_CODE_GROUP_KEY=coin-trade
-EXPLAIN_CODE_PROJECT_NAME="실시간 코인 거래 대시보드"
+EXPLAIN_CODE_PROJECT_NAME="Real-time coin trading dashboard"
 ```
 
 Do not print the full token. If the token is missing, ask the user to set `EXPLAIN_CODE_API_TOKEN`.
 
+## Publisher Tool
+
+Use the project-local publisher when it exists:
+
+```bash
+node tools/explain-code-ingest/publish.mjs
+```
+
+Otherwise use the installer-provided publisher:
+
+```bash
+node ~/.explain-code/tools/explain-code-ingest/publish.mjs
+```
+
 ## Workflow
 
 1. Inspect the recent code change or the files the user wants to explain.
-2. List existing Explain Code groups:
-
-```bash
-node tools/explain-code-ingest/publish.mjs --list-groups
-```
-
+2. List existing Explain Code groups with the publisher tool and `--list-groups`.
 3. Choose `groupKey`:
    - If `EXPLAIN_CODE_GROUP_KEY` is set, use it.
    - Otherwise, reuse the exact `id` of a matching existing group.
@@ -37,17 +51,8 @@ node tools/explain-code-ingest/publish.mjs --list-groups
 5. Prefer several `codeSnippets` over one long snippet. Each snippet needs `title`, `language`, `code`, and `description`.
 6. Write detailed `syntaxNotes` for framework, library, and language concepts used by the snippets.
 7. Save the payload to a temporary file such as `.explain-code/payload.json`.
-8. Validate without sending:
-
-```bash
-node tools/explain-code-ingest/publish.mjs .explain-code/payload.json --dry-run
-```
-
-9. If validation passes and the user asked to publish, send it:
-
-```bash
-node tools/explain-code-ingest/publish.mjs .explain-code/payload.json
-```
+8. Validate without sending by running the publisher tool with `.explain-code/payload.json --dry-run`.
+9. If validation passes and the user asked to publish, run the publisher tool with `.explain-code/payload.json`.
 
 ## Payload Guidance
 

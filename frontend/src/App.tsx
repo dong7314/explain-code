@@ -115,6 +115,7 @@ SyntaxHighlighter.registerLanguage("yaml", yaml);
 type PageKey = "learning" | "qa" | "community" | "integrations";
 type BoardPageKey = "qa" | "community";
 type Connector = "codex" | "claude";
+type CommandPlatform = "mac" | "windows";
 type GlobalSearchTab = "community" | "learning" | "qa";
 type SearchField = "all" | "content" | "tag" | "title";
 type SortKey = "comments" | "name" | "recent" | "recommend" | "views";
@@ -492,10 +493,51 @@ const getGlobalSearchResults = (
   return [...learningResults, ...postResults];
 };
 
+const aiClientInstallCommands = [
+  {
+    command:
+      "irm https://raw.githubusercontent.com/dong7314/explain-code/master/scripts/install-explain-code.ps1 | iex",
+    label: "Windows PowerShell",
+    platform: "windows",
+  },
+  {
+    command:
+      "curl -fsSL https://raw.githubusercontent.com/dong7314/explain-code/master/scripts/install-explain-code.sh | bash",
+    label: "macOS / Linux",
+    platform: "mac",
+  },
+] satisfies Array<{ command: string; label: string; platform: CommandPlatform }>;
+const tokenSetupCommands = [
+  {
+    command: '$env:EXPLAIN_CODE_API_URL="http://localhost:4000/api"',
+    label: "Windows API URL",
+    platform: "windows",
+  },
+  {
+    command: '$env:EXPLAIN_CODE_API_TOKEN="expc_live_..."',
+    label: "Windows token",
+    platform: "windows",
+  },
+  {
+    command: 'export EXPLAIN_CODE_API_URL="http://localhost:4000/api"',
+    label: "macOS/Linux API URL",
+    platform: "mac",
+  },
+  {
+    command: 'export EXPLAIN_CODE_API_TOKEN="expc_live_..."',
+    label: "macOS/Linux token",
+    platform: "mac",
+  },
+] satisfies Array<{ command: string; label: string; platform: CommandPlatform }>;
+
 const connectorCopy = {
   codex: {
     title: "Codex Skill",
-    command: "codex skill install explain-code",
+    description:
+      "설치 스크립트가 Codex skill과 공용 publisher를 사용자 홈에 배치합니다. 설치 후 Codex를 재시작하면 바로 사용할 수 있습니다.",
+    installCommands: aiClientInstallCommands,
+    nextCommands: tokenSetupCommands,
+    nextTitle: "토큰 설정",
     payload: `{
   "groupKey": "coin-trade",
   "projectName": "실시간 코인 거래 대시보드",
@@ -542,7 +584,26 @@ const connectorCopy = {
   },
   claude: {
     title: "Claude Code Plugin",
-    command: "claude plugin add explain-code",
+    description:
+      "설치 스크립트가 Claude Code plugin과 실행용 launcher를 함께 배치합니다. Claude Code는 launcher로 시작한 뒤 plugin skill을 호출합니다.",
+    installCommands: aiClientInstallCommands,
+    nextCommands: [
+      ...tokenSetupCommands,
+      {
+        command:
+          'powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\\.explain-code\\claude-explain-code.ps1"',
+        label: "Windows 실행",
+      },
+      {
+        command: "~/.explain-code/claude-explain-code",
+        label: "macOS/Linux 실행",
+      },
+      {
+        command: "/explain-code:publish-learning",
+        label: "Claude Code 안에서",
+      },
+    ],
+    nextTitle: "토큰 설정 및 실행",
     payload: `{
   "groupKey": "coin-trade",
   "projectName": "실시간 코인 거래 대시보드",
@@ -4878,6 +4939,8 @@ function IntegrationsPage({
   const [issuedPlainToken, setIssuedPlainToken] = useState("");
   const [expandedPayloadConnector, setExpandedPayloadConnector] =
     useState<Connector | null>(null);
+  const [commandPlatform, setCommandPlatform] =
+    useState<CommandPlatform>("windows");
 
   const refreshIntegrationData = useCallback(async () => {
     try {
@@ -4902,8 +4965,19 @@ function IntegrationsPage({
     return () => window.clearTimeout(timeout);
   }, [refreshIntegrationData]);
 
+  const copyCommand = (command: string, label: string) => {
+    if (!navigator.clipboard) return;
+
+    void navigator.clipboard.writeText(command).then(() => {
+      toast.success("명령어가 복사되었습니다.", {
+        description: label,
+      });
+    });
+  };
   const copyInstallCommand = () => {
-    void navigator.clipboard?.writeText(connector.command);
+    const primaryCommand = connector.installCommands[0];
+
+    copyCommand(primaryCommand.command, primaryCommand.label);
   };
 
   const requestTokenReissue = () => {
@@ -4944,6 +5018,23 @@ function IntegrationsPage({
   }, [groups, logs.length]);
   const integrationStats = stats ?? fallbackStats;
   const payloadExpanded = expandedPayloadConnector === activeConnector;
+  const visibleInstallCommands = connector.installCommands.filter(
+    (command) => command.platform === commandPlatform,
+  );
+  const visibleNextCommands = connector.nextCommands.filter((command) => {
+    const platform = (command as { platform?: CommandPlatform }).platform;
+
+    if (platform) return platform === commandPlatform;
+
+    const label = command.label.toLowerCase();
+
+    if (label.includes("windows")) return commandPlatform === "windows";
+    if (label.includes("macos") || label.includes("linux")) {
+      return commandPlatform === "mac";
+    }
+
+    return true;
+  });
 
   return (
     <div className="integration-page">
@@ -4991,8 +5082,74 @@ function IntegrationsPage({
             >
               <Copy size={15} aria-hidden="true" />
             </button>
+            <div className="platform-segmented" aria-label="명령어 운영체제 선택">
+              <button
+                aria-pressed={commandPlatform === "windows"}
+                className={commandPlatform === "windows" ? "selected" : ""}
+                onClick={() => setCommandPlatform("windows")}
+                type="button"
+              >
+                Windows
+              </button>
+              <button
+                aria-pressed={commandPlatform === "mac"}
+                className={commandPlatform === "mac" ? "selected" : ""}
+                onClick={() => setCommandPlatform("mac")}
+                type="button"
+              >
+                macOS/Linux
+              </button>
+            </div>
           </div>
-          <code className="command-line">{connector.command}</code>
+          <div className="command-box-description">
+            <p>{connector.description}</p>
+            <p>
+              초기 설정 후 API URL이나 토큰 값을 변경해야 할 때는 Codex 또는
+              Claude Code에게 새 값을 전달해 설정을 업데이트하도록 요청할 수
+              있습니다. 코드 변경이 끝난 뒤에는 AI에게 "Explain Code에 현재
+              변경된 내용을 정리해서 에피소드로 올려줘"라고 요청하면 됩니다.
+            </p>
+          </div>
+
+          <div className="command-group">
+            <strong className="command-group-title">설치 명령</strong>
+            {visibleInstallCommands.map((command) => (
+              <div className="command-row" key={command.label}>
+                <span className="command-label">{command.label}</span>
+                <code className="command-line">{command.command}</code>
+                <button
+                  aria-label={`${command.label} 명령어 복사`}
+                  className="command-copy-button"
+                  onClick={() => copyCommand(command.command, command.label)}
+                  title="명령어 복사"
+                  type="button"
+                >
+                  <Copy size={15} aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="command-group">
+            <strong className="command-group-title">
+              {connector.nextTitle}
+            </strong>
+            {visibleNextCommands.map((command) => (
+              <div className="command-row" key={command.label}>
+                <span className="command-label">{command.label}</span>
+                <code className="command-line">{command.command}</code>
+                <button
+                  aria-label={`${command.label} 명령어 복사`}
+                  className="command-copy-button"
+                  onClick={() => copyCommand(command.command, command.label)}
+                  title="명령어 복사"
+                  type="button"
+                >
+                  <Copy size={15} aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
           <div
             className={
               payloadExpanded
