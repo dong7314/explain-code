@@ -28,6 +28,7 @@ import {
   Folder,
   FolderOpen,
   GitBranch,
+  Globe,
   Hash,
   KeyRound,
   ListFilter,
@@ -507,7 +508,11 @@ const aiClientInstallCommands = [
     label: "macOS / Linux",
     platform: "mac",
   },
-] satisfies Array<{ command: string; label: string; platform: CommandPlatform }>;
+] satisfies Array<{
+  command: string;
+  label: string;
+  platform: CommandPlatform;
+}>;
 const tokenSetupCommands = [
   {
     command: '$env:EXPLAIN_CODE_API_URL="http://localhost:4000/api"',
@@ -529,7 +534,11 @@ const tokenSetupCommands = [
     label: "macOS/Linux token",
     platform: "mac",
   },
-] satisfies Array<{ command: string; label: string; platform: CommandPlatform }>;
+] satisfies Array<{
+  command: string;
+  label: string;
+  platform: CommandPlatform;
+}>;
 
 const connectorCopy = {
   codex: {
@@ -671,7 +680,10 @@ const getPopularityScore = (metrics: {
   likes: number;
   views: number;
 }) =>
-  metrics.views + metrics.likes * 6 + metrics.comments * 10 - metrics.dislikes * 3;
+  metrics.views +
+  metrics.likes * 6 +
+  metrics.comments * 10 -
+  metrics.dislikes * 3;
 const formatMetricCount = (value: number) => {
   if (value >= 1000) {
     const rounded = value / 1000;
@@ -726,7 +738,7 @@ const syntaxNoteDetails: Record<
     example:
       "setCheckedItems((current) => ({ ...current, [itemId]: !current[itemId] }));",
   },
-  "codeSnippets": {
+  codeSnippets: {
     description:
       "중요한 코드 조각을 여러 개 전달하기 위한 문서 필드입니다. 각 항목은 제목, 언어, 코드, 설명을 함께 가지므로 상세 페이지에서 코드와 그 코드가 맡은 역할을 독립된 단락으로 보여줄 수 있습니다.",
     example:
@@ -739,8 +751,7 @@ const syntaxNoteDetails: Record<
   "component composition": {
     description:
       "작은 컴포넌트를 조합해 복잡한 화면을 만드는 방식입니다. 이번 학습에서는 목록, 상태 배지, 상세 본문처럼 역할이 다른 UI를 분리해 각 컴포넌트가 하나의 책임만 갖도록 만드는 흐름을 설명합니다.",
-    example:
-      "<PostCard><StatusBadge /><PostSummary /></PostCard>",
+    example: "<PostCard><StatusBadge /><PostSummary /></PostCard>",
   },
   "conditional rendering": {
     description:
@@ -838,7 +849,7 @@ const syntaxNoteDetails: Record<
     description:
       "데이터의 현재 상태를 짧은 라벨로 보여주는 UI 패턴입니다. 해결됨, 진행 중, 실패처럼 사용자가 목록을 훑으며 바로 판단해야 하는 정보를 텍스트와 색상으로 압축해 전달합니다.",
   },
-  "syntaxNotes": {
+  syntaxNotes: {
     description:
       "코드에서 사용된 프레임워크, 라이브러리, 문법 포인트를 설명하는 문서 필드입니다. 코드 블록과 분리해 저장하므로 긴 코드 옆에서 놓치기 쉬운 핵심 개념을 별도 단락으로 정리할 수 있습니다.",
     example:
@@ -1274,9 +1285,7 @@ function App() {
   const [connector, setConnector] = useState<Connector>("codex");
   const [groupItems, setGroupItems] = useState<LearningGroup[]>(groups);
   const [postItems, setPostItems] = useState<Post[]>(posts);
-  const [selectedGroupId, setSelectedGroupId] = useState(
-    groups[0]?.id ?? "",
-  );
+  const [selectedGroupId, setSelectedGroupId] = useState(groups[0]?.id ?? "");
   const [selectedEpisodeId, setSelectedEpisodeId] = useState(
     groups[0]?.episodes[0]?.id ?? "",
   );
@@ -1468,14 +1477,16 @@ function App() {
       }));
     const popularNotificationSource =
       rankedPopularPosts.length > 0 ? rankedPopularPosts : popularPosts;
-    const popularNotifications = popularNotificationSource.map((post, index) => ({
-      description: `"${post.title}" 글이 오늘의 인기글 ${index + 1}위에 올랐습니다.`,
-      href: post.to,
-      id: `popular-${index}`,
-      kind: "popular" as const,
-      time: index < 4 ? "오늘" : "어제",
-      title: "오늘의 인기글에 올랐어요",
-    }));
+    const popularNotifications = popularNotificationSource.map(
+      (post, index) => ({
+        description: `"${post.title}" 글이 오늘의 인기글 ${index + 1}위에 올랐습니다.`,
+        href: post.to,
+        id: `popular-${index}`,
+        kind: "popular" as const,
+        time: index < 4 ? "오늘" : "어제",
+        title: "오늘의 인기글에 올랐어요",
+      }),
+    );
     const tokenNotifications = [
       ["token-7d", "7일", "API 토큰 만료까지 7일 남았습니다."],
       ["token-3d", "3일", "API 토큰 만료까지 3일 남았습니다."],
@@ -1957,8 +1968,7 @@ function App() {
 
   const handleGroupChange = (groupId: string) => {
     const group =
-      groupItems.find((item) => item.id === groupId) ??
-      groupItems[0];
+      groupItems.find((item) => item.id === groupId) ?? groupItems[0];
     if (!group) return;
 
     setSelectedGroupId(group.id);
@@ -2376,46 +2386,44 @@ function App() {
               {(rankedPopularPostPages.length > 0
                 ? [...rankedPopularPostPages, rankedPopularPostPages[0]]
                 : []
-              ).map(
-                (page, pageIndex) => (
-                  <ol
-                    aria-hidden={
+              ).map((page, pageIndex) => (
+                <ol
+                  aria-hidden={
+                    pageIndex === rankedPopularPostPages.length
+                      ? "true"
+                      : undefined
+                  }
+                  className="popular-page"
+                  key={`popular-page-${pageIndex}`}
+                >
+                  {page.map((post, index) => {
+                    const rank =
                       pageIndex === rankedPopularPostPages.length
-                        ? "true"
-                        : undefined
-                    }
-                    className="popular-page"
-                    key={`popular-page-${pageIndex}`}
-                  >
-                    {page.map((post, index) => {
-                      const rank =
-                        pageIndex === rankedPopularPostPages.length
-                          ? index + 1
-                          : pageIndex * 4 + index + 1;
+                        ? index + 1
+                        : pageIndex * 4 + index + 1;
 
-                      return (
-                        <li key={`${pageIndex}-${post.title}`}>
-                          <span className="popular-rank">{rank}</span>
-                          <button
-                            onClick={() => navigate(post.to)}
-                            tabIndex={
-                              pageIndex === rankedPopularPostPages.length
-                                ? -1
-                                : undefined
-                            }
-                            type="button"
-                          >
-                            <span className="popular-kind">{post.kind}</span>
-                            <span className="popular-post-title">
-                              {post.title}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                ),
-              )}
+                    return (
+                      <li key={`${pageIndex}-${post.title}`}>
+                        <span className="popular-rank">{rank}</span>
+                        <button
+                          onClick={() => navigate(post.to)}
+                          tabIndex={
+                            pageIndex === rankedPopularPostPages.length
+                              ? -1
+                              : undefined
+                          }
+                          type="button"
+                        >
+                          <span className="popular-kind">{post.kind}</span>
+                          <span className="popular-post-title">
+                            {post.title}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ))}
             </div>
           </div>
         </section>
@@ -2624,30 +2632,33 @@ function App() {
                   </div>
                 )}
 
-                {activePage === "learning" && selectedGroup && selectedEpisode && (
-                  <LearningSeries
-                    groups={groupItems}
-                    isFavoriteGroup={favoriteGroupIds.includes(
-                      selectedGroup.id,
-                    )}
-                    loggedIn={loggedIn}
-                    selectedEpisode={selectedEpisode}
-                    selectedGroup={selectedGroup}
-                    onEpisodeOpen={openEpisodeDetail}
-                    onEpisodeSelect={setSelectedEpisodeId}
-                    onFavoriteToggle={handleToggleFavoriteGroup}
-                    onGroupChange={handleGroupChange}
-                  />
-                )}
-                {activePage === "learning" && (!selectedGroup || !selectedEpisode) && (
-                  <div className="post-empty">
-                    <strong>등록된 학습 그룹이 없습니다.</strong>
-                    <span>
-                      백엔드를 실행한 뒤 Codex 또는 Claude Code 스킬로 학습
-                      에피소드를 등록해주세요.
-                    </span>
-                  </div>
-                )}
+                {activePage === "learning" &&
+                  selectedGroup &&
+                  selectedEpisode && (
+                    <LearningSeries
+                      groups={groupItems}
+                      isFavoriteGroup={favoriteGroupIds.includes(
+                        selectedGroup.id,
+                      )}
+                      loggedIn={loggedIn}
+                      selectedEpisode={selectedEpisode}
+                      selectedGroup={selectedGroup}
+                      onEpisodeOpen={openEpisodeDetail}
+                      onEpisodeSelect={setSelectedEpisodeId}
+                      onFavoriteToggle={handleToggleFavoriteGroup}
+                      onGroupChange={handleGroupChange}
+                    />
+                  )}
+                {activePage === "learning" &&
+                  (!selectedGroup || !selectedEpisode) && (
+                    <div className="post-empty">
+                      <strong>등록된 학습 그룹이 없습니다.</strong>
+                      <span>
+                        백엔드를 실행한 뒤 Codex 또는 Claude Code 스킬로 학습
+                        에피소드를 등록해주세요.
+                      </span>
+                    </div>
+                  )}
 
                 {activePage === "integrations" && (
                   <IntegrationsPage
@@ -2929,10 +2940,18 @@ function App() {
                 dong7314
               </strong>
             </a>
-            <div className="footer-info-row muted">
+            <a
+              className="footer-info-row"
+              href="https://github.com/dong7314/explain-code"
+              rel="noreferrer"
+              target="_blank"
+            >
               <span>GitHub Repository</span>
-              <strong>To be added</strong>
-            </div>
+              <strong>
+                <Globe size={13} aria-hidden="true" />
+                https://github.com/dong7314/explain-code
+              </strong>
+            </a>
           </div>
         </div>
       </footer>
@@ -3692,7 +3711,10 @@ function LearningDetail({
 
                 if (block.type === "list") {
                   return (
-                    <ul className="md-rendered-list" key={`${block.type}-${index}`}>
+                    <ul
+                      className="md-rendered-list"
+                      key={`${block.type}-${index}`}
+                    >
                       {block.items.map((item) => (
                         <li key={item}>{item}</li>
                       ))}
@@ -3701,7 +3723,11 @@ function LearningDetail({
                 }
 
                 if (block.type === "quote") {
-                  return <blockquote key={`${block.type}-${index}`}>{block.text}</blockquote>;
+                  return (
+                    <blockquote key={`${block.type}-${index}`}>
+                      {block.text}
+                    </blockquote>
+                  );
                 }
 
                 if (block.type === "code") {
@@ -3875,7 +3901,7 @@ function WritePostPage({
           : `커뮤니티 ${selectedCategory}`,
       category: nextCategory,
       excerpt: body.trim(),
-      repo: page === "qa" ? selectedGroup : (post?.repo ?? ""),
+      repo: page === "qa" ? selectedGroup : nextCategory,
       tags,
       title: title.trim(),
     };
@@ -4438,7 +4464,10 @@ function FeedbackBar({
       const response =
         targetType === "post"
           ? await getPostComments(Number(targetPostId))
-          : await getEpisodeComments(String(targetGroupId), String(targetEpisodeId));
+          : await getEpisodeComments(
+              String(targetGroupId),
+              String(targetEpisodeId),
+            );
 
       setComments(response.comments);
       setCommentsLoaded(true);
@@ -4717,7 +4746,11 @@ function FeedbackBar({
           </div>
         )}
 
-        <div className={comments.length > 0 ? "comment-list" : "comment-list empty"}>
+        <div
+          className={
+            comments.length > 0 ? "comment-list" : "comment-list empty"
+          }
+        >
           {comments.map((comment) => (
             <div className="comment-item" key={comment.id}>
               <div className="comment-avatar small">
@@ -5083,7 +5116,10 @@ function IntegrationsPage({
             >
               <Copy size={15} aria-hidden="true" />
             </button>
-            <div className="platform-segmented" aria-label="명령어 운영체제 선택">
+            <div
+              className="platform-segmented"
+              aria-label="명령어 운영체제 선택"
+            >
               <button
                 aria-pressed={commandPlatform === "windows"}
                 className={commandPlatform === "windows" ? "selected" : ""}
@@ -5153,9 +5189,7 @@ function IntegrationsPage({
           </div>
           <div
             className={
-              payloadExpanded
-                ? "payload-preview expanded"
-                : "payload-preview"
+              payloadExpanded ? "payload-preview expanded" : "payload-preview"
             }
           >
             <code>{connector.payload}</code>
@@ -5172,7 +5206,9 @@ function IntegrationsPage({
             }
             type="button"
           >
-            <span>{payloadExpanded ? "예시 접기" : "payload 예시 전체 보기"}</span>
+            <span>
+              {payloadExpanded ? "예시 접기" : "payload 예시 전체 보기"}
+            </span>
             <ChevronDown size={14} aria-hidden="true" />
           </button>
         </div>
@@ -5217,7 +5253,9 @@ function IntegrationsPage({
               <FileText size={15} aria-hidden="true" />
               <span>
                 <strong>{log.episodeTitle || log.message}</strong>
-                <small>{log.groupName || log.groupId || "알 수 없는 그룹"}</small>
+                <small>
+                  {log.groupName || log.groupId || "알 수 없는 그룹"}
+                </small>
               </span>
               <em>
                 <Clock3 size={13} aria-hidden="true" />
@@ -5442,7 +5480,10 @@ function GlobalSearchModal({
                 <ol className="search-popular-list">
                   {popularSearchTerms.map((term, index) => (
                     <li key={term.label}>
-                      <button onClick={() => onSubmit(term.label)} type="button">
+                      <button
+                        onClick={() => onSubmit(term.label)}
+                        type="button"
+                      >
                         <span>{index + 1}</span>
                         <strong>{term.label}</strong>
                         <em className={term.trend}>
@@ -5524,10 +5565,7 @@ function GlobalSearchModal({
   );
 }
 
-const getAuthErrorMessage = (
-  error: unknown,
-  mode: "login" | "signup",
-) => {
+const getAuthErrorMessage = (error: unknown, mode: "login" | "signup") => {
   const actionLabel = mode === "signup" ? "회원가입" : "로그인";
 
   if (error instanceof ApiError) {
@@ -5743,10 +5781,7 @@ function LoginModal({
               <span>
                 {isSignup ? "이미 계정이 있으신가요?" : "계정이 없으신가요?"}
               </span>
-              <button
-                onClick={handleModeChange}
-                type="button"
-              >
+              <button onClick={handleModeChange} type="button">
                 {isSignup ? "로그인하기" : "회원가입"}
               </button>
             </div>

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { query } from "../db/pool.js";
-import { forbidden, notFound } from "../errors.js";
+import { badRequest, forbidden, notFound } from "../errors.js";
 import { mapPost } from "../mappers.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { optionalAuth, requireAuth } from "../middleware/auth.js";
@@ -39,7 +39,7 @@ const postSchema = z.object({
   title: z.string().min(2).max(200),
   excerpt: z.string().min(2).max(600).optional(),
   body: z.string().min(2).max(10000),
-  repo: z.string().min(1).max(80),
+  repo: z.string().trim().max(80).optional(),
   tags: z.array(z.string().min(1).max(40)).default([]),
   solved: z.boolean().optional(),
 });
@@ -168,6 +168,12 @@ router.post(
   asyncHandler(async (request: AuthRequest, response) => {
     const input = postSchema.parse(request.body);
     const excerpt = input.excerpt ?? input.body.slice(0, 240);
+    const repo = input.repo?.trim();
+
+    if (input.page === "qa" && !repo) {
+      throw badRequest("Q&A 글은 프로젝트 그룹이 필요합니다.");
+    }
+
     const result = await query(
       `
         INSERT INTO posts (
@@ -193,7 +199,7 @@ router.post(
         excerpt,
         input.body,
         request.user?.id,
-        input.repo,
+        repo || input.category,
         input.tags,
         input.solved ?? false,
       ],
@@ -226,9 +232,14 @@ router.patch(
     const id = Number(request.params.postId);
     const input = updatePostSchema.parse(request.body);
     const post = await getPost(id);
+    const repo = input.repo?.trim();
 
     if (post.author_id !== request.user?.id && request.user?.role !== "admin") {
       throw forbidden("게시글을 수정할 권한이 없습니다.");
+    }
+
+    if (post.page === "qa" && input.repo !== undefined && !repo) {
+      throw badRequest("Q&A 글은 프로젝트 그룹이 필요합니다.");
     }
 
     await query(
@@ -252,7 +263,7 @@ router.patch(
         input.title,
         input.excerpt,
         input.body,
-        input.repo,
+        input.repo === undefined ? undefined : repo || input.category || post.category,
         input.tags,
         input.solved,
       ],
