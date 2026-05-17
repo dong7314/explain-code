@@ -2147,6 +2147,8 @@ a.footer-info-row:hover strong {
   color: #374151;
   font-size: 15px;
   line-height: 1.8;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .post-edit-body {

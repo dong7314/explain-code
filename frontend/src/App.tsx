@@ -141,6 +141,7 @@ type Post = {
   board: string;
   category: string;
   title: string;
+  body?: string;
   excerpt: string;
   author: string;
   repo: string;
@@ -432,6 +433,9 @@ const sortPosts = (items: Post[], sortKey: SortKey) => {
 const textMatchesQuery = (text: string, query: string) => {
   return text.toLowerCase().includes(query.toLowerCase());
 };
+
+const createPostExcerpt = (body: string) =>
+  body.trim().replace(/\s+/g, " ").slice(0, 240);
 
 const getGlobalSearchResults = (
   query: string,
@@ -2083,7 +2087,7 @@ function App() {
     const response = await createPost({
       body: payload.excerpt,
       category: payload.category,
-      excerpt: payload.excerpt,
+      excerpt: createPostExcerpt(payload.excerpt),
       page,
       repo: payload.repo,
       tags: payload.tags,
@@ -2104,7 +2108,7 @@ function App() {
     const response = await updatePostRequest(postId, {
       body: updates.excerpt,
       category: updates.category,
-      excerpt: updates.excerpt,
+      excerpt: createPostExcerpt(updates.excerpt),
       repo: updates.repo,
       tags: updates.tags,
       title: updates.title,
@@ -3822,7 +3826,7 @@ function WritePostPage({
     useState(initialQaCategory);
   const [tagDraft, setTagDraft] = useState("");
   const [tags, setTags] = useState<string[]>(post?.tags ?? []);
-  const [body, setBody] = useState(post?.excerpt ?? "");
+  const [body, setBody] = useState(post?.body ?? post?.excerpt ?? "");
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(
     null,
   );
@@ -4306,7 +4310,7 @@ function PostDetail({
       </header>
 
       <section className="post-detail-body">
-        <p>{post.excerpt}</p>
+        <p>{post.body ?? post.excerpt}</p>
         <div className="tag-row">
           {post.tags.map((tag) => (
             <span key={tag}>
