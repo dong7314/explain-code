@@ -125,6 +125,12 @@ export type ApiSearchResult = {
   title: string;
 };
 
+export type ApiPopularSearchTerm = {
+  count?: number;
+  label: string;
+  trend: "down" | "same" | "up";
+};
+
 export type ApiTokenItem = {
   createdAt: string;
   expiresAt: string;
@@ -272,8 +278,12 @@ export const setEpisodeReaction = (
 export const searchAll = (query: string) =>
   apiRequest<{
     counts: Record<"community" | "learning" | "qa", number>;
+    popular: ApiPopularSearchTerm[];
     results: ApiSearchResult[];
   }>(`/search?q=${encodeURIComponent(query)}`);
+
+export const getPopularSearchTerms = () =>
+  apiRequest<{ popular: ApiPopularSearchTerm[] }>("/search/popular");
 
 export const getNotifications = (limit = 30) =>
   apiRequest<{

@@ -80,6 +80,7 @@ import {
   getIntegrationLogs,
   getMe,
   getNotifications,
+  getPopularSearchTerms,
   getPost,
   getPostComments,
   getPosts,
@@ -97,6 +98,7 @@ import {
   type ApiEpisodeBody,
   type ApiIntegrationLog,
   type ApiIntegrationStats,
+  type ApiPopularSearchTerm,
   type ApiTokenItem,
 } from "./api/explainCode";
 import { ApiError } from "./api/http";
@@ -273,25 +275,43 @@ const globalSearchTabs: Array<{ key: GlobalSearchTab; label: string }> = [
   { key: "community", label: "커뮤니티" },
 ];
 
-const initialRecentSearches = [
-  "React",
-  "useMemo",
-  "토큰",
-  "모각코",
-  "프로젝트",
-  "NestJS",
-];
+const RECENT_SEARCH_STORAGE_KEY = "explain-code-recent-searches";
+const POPULAR_SEARCH_SLOT_COUNT = 8;
+type PopularSearchTrend = "down" | "same" | "up";
+type PopularSearchTerm = ApiPopularSearchTerm & {
+  label: string;
+  trend: PopularSearchTrend;
+};
 
-const popularSearchTerms = [
-  { label: "React", trend: "up" },
-  { label: "토큰", trend: "up" },
-  { label: "useMemo", trend: "same" },
-  { label: "AI 학습", trend: "up" },
-  { label: "NestJS", trend: "down" },
-  { label: "댓글", trend: "same" },
-  { label: "프로젝트", trend: "up" },
-  { label: "모각코", trend: "down" },
-];
+const readRecentSearches = () => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const storedValue = window.localStorage.getItem(RECENT_SEARCH_STORAGE_KEY);
+    const parsedValue = storedValue ? JSON.parse(storedValue) : [];
+
+    if (!Array.isArray(parsedValue)) return [];
+
+    return parsedValue
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+  } catch {
+    return [];
+  }
+};
+
+const writeRecentSearches = (items: string[]) => {
+  if (typeof window === "undefined") return;
+
+  if (items.length === 0) {
+    window.localStorage.removeItem(RECENT_SEARCH_STORAGE_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(RECENT_SEARCH_STORAGE_KEY, JSON.stringify(items));
+};
 
 const pageMeta: Record<
   PageKey,
@@ -434,8 +454,14 @@ const textMatchesQuery = (text: string, query: string) => {
   return text.toLowerCase().includes(query.toLowerCase());
 };
 
-const createPostExcerpt = (body: string) =>
-  body.trim().replace(/\s+/g, " ").slice(0, 240);
+const createPostExcerpt = (body: string) => {
+  const maxLength = 240;
+  const normalized = body.trim().replace(/\s+/g, " ");
+
+  if (normalized.length <= maxLength) return normalized;
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+};
 
 const getGlobalSearchResults = (
   query: string,
@@ -1324,7 +1350,10 @@ function App() {
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
   const [globalSearchTab, setGlobalSearchTab] =
     useState<GlobalSearchTab>("learning");
-  const [recentSearches, setRecentSearches] = useState(initialRecentSearches);
+  const [recentSearches, setRecentSearches] = useState(readRecentSearches);
+  const [popularSearchTerms, setPopularSearchTerms] = useState<
+    PopularSearchTerm[]
+  >([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsRead, setNotificationsRead] = useState(false);
   const [visibleNotificationCount, setVisibleNotificationCount] = useState(6);
@@ -1696,18 +1725,22 @@ function App() {
     setGlobalSearchTab("learning");
     setServerSearchResults(null);
     setServerSearchCounts(null);
-    setRecentSearches((current) =>
-      [
+    setRecentSearches((current) => {
+      const nextSearches = [
         nextQuery,
         ...current.filter(
           (item) => item.toLowerCase() !== nextQuery.toLowerCase(),
         ),
-      ].slice(0, 8),
-    );
+      ].slice(0, 8);
+
+      writeRecentSearches(nextSearches);
+      return nextSearches;
+    });
     void searchAll(nextQuery)
       .then((response) => {
         setServerSearchResults(response.results);
         setServerSearchCounts(response.counts);
+        setPopularSearchTerms(response.popular ?? []);
       })
       .catch((error) => {
         console.error("Failed to search", error);
@@ -1871,6 +1904,16 @@ function App() {
     }
   }, [loggedIn]);
 
+  const refreshPopularSearchTerms = useCallback(async () => {
+    try {
+      const response = await getPopularSearchTerms();
+      setPopularSearchTerms(response.popular);
+    } catch (error) {
+      console.error("Failed to load popular search terms", error);
+      setPopularSearchTerms([]);
+    }
+  }, []);
+
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       void refreshPublicData();
@@ -1955,6 +1998,12 @@ function App() {
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [notificationsOpen]);
+
+  useEffect(() => {
+    if (!globalSearchOpen) return;
+
+    void refreshPopularSearchTerms();
+  }, [globalSearchOpen, refreshPopularSearchTerms]);
 
   useEffect(() => {
     const element = categoryTabsRef.current;
@@ -2965,12 +3014,16 @@ function App() {
           activeTab={globalSearchTab}
           counts={globalSearchCounts}
           draft={globalSearchDraft}
-          onClearRecent={() => setRecentSearches([])}
+          onClearRecent={() => {
+            setRecentSearches([]);
+            writeRecentSearches([]);
+          }}
           onClose={() => setGlobalSearchOpen(false)}
           onDraftChange={updateGlobalSearchDraft}
           onOpenResult={openGlobalSearchResult}
           onSubmit={submitGlobalSearch}
           onTabChange={setGlobalSearchTab}
+          popularSearchTerms={popularSearchTerms}
           query={globalSearchQuery}
           recentSearches={recentSearches}
           results={activeGlobalSearchResults}
@@ -5313,6 +5366,7 @@ function GlobalSearchModal({
   onOpenResult,
   onSubmit,
   onTabChange,
+  popularSearchTerms,
   query,
   recentSearches,
   results,
@@ -5326,6 +5380,7 @@ function GlobalSearchModal({
   onOpenResult: (href: string) => void;
   onSubmit: (query: string) => void;
   onTabChange: (tab: GlobalSearchTab) => void;
+  popularSearchTerms: PopularSearchTerm[];
   query: string;
   recentSearches: string[];
   results: GlobalSearchResult[];
@@ -5475,34 +5530,43 @@ function GlobalSearchModal({
               </div>
             </section>
 
-            {popularSearchTerms.length > 0 && (
-              <section className="search-discovery-section">
-                <div className="search-section-head">
-                  <strong>인기 검색어</strong>
-                  <span>실시간 기준</span>
-                </div>
-                <ol className="search-popular-list">
-                  {popularSearchTerms.map((term, index) => (
-                    <li key={term.label}>
-                      <button
-                        onClick={() => onSubmit(term.label)}
-                        type="button"
-                      >
-                        <span>{index + 1}</span>
-                        <strong>{term.label}</strong>
-                        <em className={term.trend}>
-                          {term.trend === "up"
-                            ? "▲"
-                            : term.trend === "down"
-                              ? "▼"
+            <section className="search-discovery-section">
+              <div className="search-section-head">
+                <strong>인기 검색어</strong>
+                <span>실시간 기준</span>
+              </div>
+              <ol className="search-popular-list">
+                {Array.from({ length: POPULAR_SEARCH_SLOT_COUNT }).map(
+                  (_, index) => {
+                    const term = popularSearchTerms[index];
+
+                    return (
+                      <li key={term?.label ?? `empty-popular-${index}`}>
+                        <button
+                          disabled={!term}
+                          onClick={() => {
+                            if (term) onSubmit(term.label);
+                          }}
+                          type="button"
+                        >
+                          <span>{index + 1}</span>
+                          <strong>{term?.label ?? "-"}</strong>
+                          <em className={term?.trend ?? "same"}>
+                            {term
+                              ? term.trend === "up"
+                                ? "▲"
+                                : term.trend === "down"
+                                  ? "▼"
+                                  : "-"
                               : "-"}
-                        </em>
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            )}
+                          </em>
+                        </button>
+                      </li>
+                    );
+                  },
+                )}
+              </ol>
+            </section>
           </div>
         ) : (
           <div className="search-results-view">

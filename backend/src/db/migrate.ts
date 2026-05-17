@@ -145,6 +145,23 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS search_terms (
+  normalized_term text PRIMARY KEY,
+  term text NOT NULL,
+  search_count integer NOT NULL DEFAULT 0 CHECK (search_count >= 0),
+  rank_position integer,
+  previous_rank_position integer,
+  last_searched_at timestamptz NOT NULL DEFAULT now(),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE IF EXISTS search_terms
+  ADD COLUMN IF NOT EXISTS rank_position integer;
+
+ALTER TABLE IF EXISTS search_terms
+  ADD COLUMN IF NOT EXISTS previous_rank_position integer;
+
 CREATE INDEX IF NOT EXISTS idx_project_groups_owner ON project_groups(owner_id);
 CREATE INDEX IF NOT EXISTS idx_episodes_group ON episodes(group_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_page_created ON posts(page, created_at DESC);
@@ -155,6 +172,7 @@ CREATE INDEX IF NOT EXISTS idx_reactions_target ON reactions(resource_type, targ
 CREATE INDEX IF NOT EXISTS idx_content_views_target ON content_views(resource_type, target_key, viewed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_integration_logs_created ON integration_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_terms_popular ON search_terms(search_count DESC, last_searched_at DESC);
 
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS trigger AS $$
@@ -174,7 +192,8 @@ BEGIN
     'episodes',
     'posts',
     'comments',
-    'reactions'
+    'reactions',
+    'search_terms'
   ]
   LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS trg_%I_updated_at ON %I', table_name, table_name);

@@ -1,34 +1,157 @@
 import { Router } from "express";
-import { query } from "../db/pool.js";
+import { query, withTransaction } from "../db/pool.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 
 const router = Router();
 
-const popularSearchTerms = [
-  { label: "React", trend: "up" },
-  { label: "토큰", trend: "up" },
-  { label: "useMemo", trend: "same" },
-  { label: "AI 학습", trend: "up" },
-  { label: "NestJS", trend: "down" },
-  { label: "댓글", trend: "same" },
-  { label: "프로젝트", trend: "up" },
-  { label: "모각코", trend: "down" },
-];
+const normalizeSearchTerm = (value: string) =>
+  value.trim().replace(/\s+/g, " ").slice(0, 80);
+
+type SearchTrend = "down" | "same" | "up";
+
+type SearchRankRow = {
+  normalized_term: string;
+  rank_position: number;
+};
+
+const getTrend = (
+  rankPosition: number | null,
+  previousRankPosition: number | null,
+): SearchTrend => {
+  if (!rankPosition || !previousRankPosition) return "same";
+  if (rankPosition < previousRankPosition) return "up";
+  if (rankPosition > previousRankPosition) return "down";
+  return "same";
+};
+
+const getRankSnapshot = async () => {
+  const result = await query<SearchRankRow>(
+    `
+      SELECT
+        normalized_term,
+        row_number() OVER (
+          ORDER BY search_count DESC, last_searched_at DESC
+        )::int AS rank_position
+      FROM search_terms
+      LIMIT 100
+    `,
+  );
+
+  return new Map(
+    result.rows.map((row) => [row.normalized_term, row.rank_position]),
+  );
+};
+
+const updateRankSnapshot = async (previousRanks: Map<string, number>) => {
+  const currentRanks = await query<SearchRankRow>(
+    `
+      SELECT
+        normalized_term,
+        row_number() OVER (
+          ORDER BY search_count DESC, last_searched_at DESC
+        )::int AS rank_position
+      FROM search_terms
+      LIMIT 100
+    `,
+  );
+
+  await Promise.all(
+    currentRanks.rows.map((row) =>
+      query(
+        `
+          UPDATE search_terms
+          SET
+            previous_rank_position = $2,
+            rank_position = $3,
+            updated_at = now()
+          WHERE normalized_term = $1
+        `,
+        [
+          row.normalized_term,
+          previousRanks.get(row.normalized_term) ?? null,
+          row.rank_position,
+        ],
+      ),
+    ),
+  );
+};
+
+const getPopularSearchTerms = async () => {
+  const result = await query<{
+    previous_rank_position: number | null;
+    rank_position: number | null;
+    search_count: number;
+    term: string;
+  }>(
+    `
+      SELECT term, search_count, rank_position, previous_rank_position
+      FROM search_terms
+      ORDER BY search_count DESC, last_searched_at DESC
+      LIMIT 8
+    `,
+  );
+
+  return result.rows.map((row) => ({
+    count: Number(row.search_count),
+    label: row.term,
+    trend: getTrend(row.rank_position, row.previous_rank_position),
+  }));
+};
+
+const recordSearchTerm = async (term: string) => {
+  const normalizedTerm = normalizeSearchTerm(term);
+
+  if (!normalizedTerm) return;
+
+  const previousRanks = await getRankSnapshot();
+
+  await withTransaction(async (client) => {
+    await client.query(
+      `
+        INSERT INTO search_terms (
+          normalized_term,
+          term,
+          search_count,
+          last_searched_at
+        )
+        VALUES ($1, $2, 1, now())
+        ON CONFLICT (normalized_term)
+        DO UPDATE SET
+          term = EXCLUDED.term,
+          search_count = search_terms.search_count + 1,
+          last_searched_at = now(),
+          updated_at = now()
+      `,
+      [normalizedTerm.toLowerCase(), normalizedTerm],
+    );
+  });
+
+  await updateRankSnapshot(previousRanks);
+};
+
+router.get(
+  "/popular",
+  asyncHandler(async (_request, response) => {
+    response.json({ popular: await getPopularSearchTerms() });
+  }),
+);
 
 router.get(
   "/",
   asyncHandler(async (request, response) => {
-    const q = String(request.query.q ?? "").trim();
+    const q = normalizeSearchTerm(String(request.query.q ?? ""));
 
     if (!q) {
       response.json({
         query: q,
         counts: { learning: 0, qa: 0, community: 0 },
         results: [],
-        popular: popularSearchTerms,
+        popular: await getPopularSearchTerms(),
       });
       return;
     }
+
+    await recordSearchTerm(q);
 
     const pattern = `%${q}%`;
     const learning = await query(
@@ -114,7 +237,7 @@ router.get(
         community: results.filter((item) => item.tab === "community").length,
       },
       results,
-      popular: popularSearchTerms,
+      popular: await getPopularSearchTerms(),
     });
   }),
 );
