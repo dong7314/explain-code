@@ -98,6 +98,7 @@ import {
   type ApiIntegrationStats,
   type ApiTokenItem,
 } from "./api/explainCode";
+import { ApiError } from "./api/http";
 import { runtimeConfig } from "./config/runtime";
 import "./App.css";
 
@@ -5521,6 +5522,45 @@ function GlobalSearchModal({
   );
 }
 
+const getAuthErrorMessage = (
+  error: unknown,
+  mode: "login" | "signup",
+) => {
+  const actionLabel = mode === "signup" ? "회원가입" : "로그인";
+
+  if (error instanceof ApiError) {
+    if (error.status === 400) {
+      return `${actionLabel} 요청 형식이 올바르지 않습니다. 아이디와 비밀번호를 다시 확인해주세요.`;
+    }
+
+    if (error.status === 401) {
+      return mode === "signup"
+        ? "회원가입에 실패했습니다. 비밀번호 확인 값이 일치하지 않거나 인증 정보가 올바르지 않습니다."
+        : "로그인에 실패했습니다. 아이디 또는 비밀번호가 올바르지 않습니다.";
+    }
+
+    if (error.status === 409) {
+      return "회원가입에 실패했습니다. 이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.";
+    }
+
+    if (error.status >= 500) {
+      return `${actionLabel} 처리 중 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.`;
+    }
+
+    return `${actionLabel} 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.`;
+  }
+
+  if (error instanceof TypeError) {
+    return `${actionLabel} 서버에 연결할 수 없습니다. 백엔드가 실행 중인지, API URL 설정이 올바른지 확인해주세요.`;
+  }
+
+  if (error instanceof Error) {
+    return `${actionLabel} 처리 중 오류가 발생했습니다. ${error.message}`;
+  }
+
+  return `${actionLabel} 처리 중 알 수 없는 오류가 발생했습니다. 입력값과 서버 상태를 다시 확인해주세요.`;
+};
+
 function LoginModal({
   currentUser,
   loggedIn,
@@ -5540,8 +5580,8 @@ function LoginModal({
   onLogout: () => void;
 }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
-  const [username, setUsername] = useState("mirae.dev");
-  const [password, setPassword] = useState("explain-code-demo");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [authError, setAuthError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -5557,9 +5597,26 @@ function LoginModal({
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAuthError("");
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername || !password) {
+      setAuthError(
+        "아이디와 비밀번호를 모두 입력해주세요. 입력값이 비어 있으면 인증 요청을 보낼 수 없습니다.",
+      );
+      return;
+    }
+
+    if (password.length < 4) {
+      setAuthError(
+        "비밀번호는 최소 4자 이상 입력해주세요. 현재 입력한 비밀번호가 너무 짧습니다.",
+      );
+      return;
+    }
 
     if (isSignup && password !== passwordConfirm) {
-      setAuthError("비밀번호 확인이 일치하지 않습니다.");
+      setAuthError(
+        "비밀번호 확인이 일치하지 않습니다. 비밀번호와 비밀번호 재입력 값을 다시 확인해주세요.",
+      );
       return;
     }
 
@@ -5568,16 +5625,19 @@ function LoginModal({
       mode,
       password,
       passwordConfirm,
-      username,
+      username: trimmedUsername,
     })
       .catch((error) => {
-        setAuthError(
-          error instanceof Error
-            ? error.message
-            : "로그인 처리 중 오류가 발생했습니다.",
-        );
+        setAuthError(getAuthErrorMessage(error, mode));
       })
       .finally(() => setSubmitting(false));
+  };
+
+  const handleModeChange = () => {
+    setMode(isSignup ? "login" : "signup");
+    setPassword("");
+    setPasswordConfirm("");
+    setAuthError("");
   };
 
   return (
@@ -5682,7 +5742,7 @@ function LoginModal({
                 {isSignup ? "이미 계정이 있으신가요?" : "계정이 없으신가요?"}
               </span>
               <button
-                onClick={() => setMode(isSignup ? "login" : "signup")}
+                onClick={handleModeChange}
                 type="button"
               >
                 {isSignup ? "로그인하기" : "회원가입"}

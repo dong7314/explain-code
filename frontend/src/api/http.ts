@@ -47,10 +47,19 @@ export const apiRequest = async <ResponseBody>(
     ...requestInit,
     headers: requestHeaders,
   });
+  const contentType = response.headers.get("content-type") ?? "";
   const responseBody = await parseResponseBody(response);
 
   if (!response.ok) {
     throw new ApiError(response.statusText || "API request failed", response.status, responseBody);
+  }
+
+  if (response.status !== 204 && !contentType.includes("application/json")) {
+    throw new ApiError(
+      "Expected JSON response from API",
+      response.status,
+      responseBody,
+    );
   }
 
   return responseBody as ResponseBody;
