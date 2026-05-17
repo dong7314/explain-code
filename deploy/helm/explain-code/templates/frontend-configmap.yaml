@@ -1,0 +1,17 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "explain-code.fullname" . }}-frontend-config
+  labels:
+    {{- include "explain-code.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+data:
+  runtime-config.js: |
+    window.__EXPLAIN_CODE_CONFIG__ = {
+      appEnv: {{ .Values.global.env | quote }},
+      apiBaseUrl: {{ .Values.frontend.config.apiBaseUrl | quote }},
+      authTokenStorageKey: {{ .Values.frontend.config.authTokenStorageKey | quote }},
+      authStateStorageKey: {{ .Values.frontend.config.authStateStorageKey | quote }},
+    };
+{{- end }}

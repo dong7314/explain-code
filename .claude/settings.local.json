@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(EXPLAIN_CODE_API_URL=\"http://localhost:4000/api\" EXPLAIN_CODE_API_TOKEN=\"expc_live_G8c-Ynuipsnn3MUSYbwXaNP-oaUjpx9S\" node tools/explain-code-ingest/publish.mjs --list-groups)",
+      "Bash(EXPLAIN_CODE_API_URL=\"http://localhost:4000/api\" EXPLAIN_CODE_API_TOKEN=\"expc_live_G8c-Ynuipsnn3MUSYbwXaNP-oaUjpx9S\" node tools/explain-code-ingest/publish.mjs .explain-code/claude-learning-payload.json --dry-run)",
+      "Bash(EXPLAIN_CODE_API_URL=\"http://localhost:4000/api\" EXPLAIN_CODE_API_TOKEN=\"expc_live_G8c-Ynuipsnn3MUSYbwXaNP-oaUjpx9S\" node tools/explain-code-ingest/publish.mjs .explain-code/claude-learning-payload.json)"
+    ]
+  }
+}

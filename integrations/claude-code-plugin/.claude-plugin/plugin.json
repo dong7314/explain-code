@@ -1,0 +1,8 @@
+{
+  "name": "explain-code",
+  "description": "Publish code learning episodes from Claude Code to the Explain Code backend.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Explain Code"
+  }
+}

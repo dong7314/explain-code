@@ -1,0 +1,73 @@
+{
+  "groupKey": "react-hooks",
+  "title": "React Hooks 심층 학습: useMemo로 성능 최적화하기",
+  "summary": "불필요한 계산을 방지하고 렌더링 성능을 최적화하는 useMemo의 개념과 사용법, 그리고 주의할 점을 정리했습니다.",
+  "overview": "이번 학습 에피소드는 React의 useMemo 훅을 심층적으로 다룹니다. useMemo의 작동 원리, 언제 사용해야 하는지, 언제 사용하면 안 되는지, 그리고 흔히 하는 실수와 성능 최적화 팁을 포함합니다.",
+  "frameworks": ["React", "TypeScript"],
+  "concepts": ["useMemo", "React.memo", "Reference Equality", "Dependency Array", "Performance Optimization"],
+  "flow": [
+    "useMemo의 기본 개념과 작동 원리",
+    "렌더링 최적화가 필요한 경우",
+    "의존성 배열과 메모이제이션",
+    "흔한 실수와 안티 패턴",
+    "React.memo와의 조합"
+  ],
+  "codeSnippets": [
+    {
+      "title": "useMemo 기본 문법",
+      "language": "tsx",
+      "description": "useMemo는 계산 비용이 큰 값을 메모이제이션합니다. 첫 번째 인자는 계산 함수, 두 번째 인자는 의존성 배열입니다.",
+      "code": "// 기본 구조\nconst memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);\n\n// 실제 예시: 무거운 계산 최적화\nconst sortedList = useMemo(() => {\n  console.log('정렬 계산 실행...');\n  return items.sort((a, b) => a - b);\n}, [items]); // items가 변경될 때만 재계산"
+    },
+    {
+      "title": "객체 참조 안정화",
+      "language": "tsx",
+      "description": "useMemo를 사용하여 객체의 참조를 안정화하면 자식 컴포넌트의 불필요한 리렌더링을 방지할 수 있습니다.",
+      "code": "function ParentComponent() {\n  const [count, setCount] = useState(0);\n\n  // ❌ 매 렌더링마다 새로운 객체 생성\n  // const style = { color: 'red', fontSize: '20px' };\n\n  // ✅ useMemo로 참조 안정화\n  const style = useMemo(\n    () => ({ color: 'red', fontSize: '20px' }),\n    [] // 의존성이 없으므로 한 번만 생성\n  );\n\n  return <ChildComponent style={style} />;\n}"
+    },
+    {
+      "title": "React.memo와의 조합",
+      "language": "tsx",
+      "description": "React.memo로 감싼 자식 컴포넌트에 props를 전달할 때, useMemo를 사용하여 props 참조를 안정화합니다.",
+      "code": "const ExpensiveChild = React.memo(({ data, config }) => {\n  console.log('ExpensiveChild 렌더링');\n  return <div>{/* 무거운 렌더링 */}</div>;\n});\n\nfunction Parent() {\n  const [items, setItems] = useState([]);\n  const [filter, setFilter] = useState('');\n\n  // 필터링된 결과 메모이제이션\n  const filteredItems = useMemo(\n    () => items.filter(item => item.name.includes(filter)),\n    [items, filter]\n  );\n\n  // 설정 객체 메모이제이션\n  const config = useMemo(\n    () => ({ theme: 'dark', pageSize: 20 }),\n    []\n  );\n\n  return <ExpensiveChild data={filteredItems} config={config} />;\n}"
+    },
+    {
+      "title": "useMemo 안티 패턴",
+      "language": "tsx",
+      "description": "단순한 계산에 useMemo를 과도하게 사용하면 오히려 성능이 저하됩니다. 메모이제이션 비용이 계산 비용보다 큰 경우입니다.",
+      "code": "// ❌ 안티 패턴: 단순 계산에 useMemo 사용\nconst doubled = useMemo(() => count * 2, [count]);\n// useMemo의 오버헤드가 count * 2 계산보다 더 큽니다.\n\n// ✅ 올바른 사용: 그냥 계산\nconst doubled = count * 2;\n\n// ✅ useMemo가 적절한 경우: 무거운 계산\nconst fibonacci = useMemo(() => {\n  const fib = (n) => n <= 1 ? n : fib(n - 1) + fib(n - 2);\n  return fib(largeNumber);\n}, [largeNumber]);"
+    }
+  ],
+  "syntaxNotes": [
+    {
+      "name": "Dependency Array (의존성 배열)",
+      "description": "useMemo의 두 번째 인자로 전달되는 배열입니다. 배열 내의 값들이 변경될 때만 메모이제이션된 값이 재계산됩니다. 빈 배열 []은 마운트 시 한 번만 계산함을 의미합니다."
+    },
+    {
+      "name": "Reference Equality (참조 동등성)",
+      "description": "JavaScript에서 객체와 배열은 참조로 비교됩니다. {} === {}는 false입니다. useMemo는 같은 참조를 반환하여 자식 컴포넌트의 불필요한 리렌더링을 방지합니다."
+    },
+    {
+      "name": "React.memo",
+      "description": "컴포넌트를 감싸서 props가 변경되지 않으면 리렌더링을 건너뛰는 고차 컴포넌트입니다. useMemo와 함께 사용하여 최적의 성능을 낼 수 있습니다."
+    },
+    {
+      "name": "Stale Closure (오래된 클로저)",
+      "description": "useMemo 내부에서 외부 상태를 참조할 때, 의존성 배열에 포함하지 않으면 이전(오래된) 값을 참조하는 문제가 발생할 수 있습니다. 항상 필요한 의존성을 배열에 포함해야 합니다."
+    }
+  ],
+  "bestPractices": [
+    "실제로 성능 문제가 확인되기 전까지 useMemo 사용을 지연하세요 (Premature Optimization 피하기)",
+    "계산 비용이 미미한 경우 (단순 산술, 배열 메서드 등)에는 useMemo를 사용하지 마세요",
+    "의존성 배열에 모든 사용된 변수를 포함하세요. ESLint의 react-hooks/exhaustive-deps 규칙을 활용하세요",
+    "객체/배열을 props로 받는 자식 컴포넌트가 React.memo로 감싸져 있을 때 useMemo를 고려하세요",
+    "useMemo 내부에서 부작용(Side Effect)을 일으키지 마세요. useEffect를 사용하세요"
+  ],
+  "commonMistakes": [
+    "의존성 배열 누락으로 인한 stale closure 버그",
+    "단순한 값에 useMemo를 과도하게 적용하여 오히려 성능 저하",
+    "useMemo 내부에서 API 호출이나 상태 변경 같은 부작용 수행",
+    "useMemo와 useCallback을 혼동하여 함수 메모이제이션에 useMemo 사용"
+  ],
+  "createdBy": "claude"
+}

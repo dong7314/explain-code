@@ -1,0 +1,57 @@
+global:
+  env: local
+
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: docker.io/your-dockerhub/explain-code-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  containerPort: 80
+  config:
+    apiBaseUrl: /api
+    authTokenStorageKey: explain-code-auth-token
+    authStateStorageKey: explain-code-logged-in
+  resources: {}
+
+backend:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: docker.io/your-dockerhub/explain-code-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  containerPort: 4000
+  config:
+    NODE_ENV: production
+    PORT: "4000"
+    CORS_ORIGIN: https://explain-code.local
+    PGHOST: ""
+    PGPORT: "5432"
+    PGDATABASE: explain_code
+    PGUSER: explain_code
+    SEED_ADMIN_USERNAME: mirae.dev
+  secret:
+    DATABASE_URL: ""
+    JWT_SECRET: ""
+    TOKEN_PEPPER: ""
+    PGPASSWORD: ""
+  resources: {}
+
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: explain-code.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+  tls: []
