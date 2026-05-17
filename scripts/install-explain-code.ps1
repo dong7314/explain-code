@@ -120,7 +120,8 @@ exit `$LASTEXITCODE
   Write-Host "    `$env:EXPLAIN_CODE_API_TOKEN = `"expc_live_...`""
   Write-Host "  Optional:"
   Write-Host "    `$env:EXPLAIN_CODE_API_URL = `"http://localhost:4000/api`""
-  Write-Host "    `$env:EXPLAIN_CODE_GROUP_KEY = `"coin-trade`""
+  Write-Host "  Group selection:"
+  Write-Host "    Codex and Claude Code will list existing groups and choose or create the group automatically."
   Write-Host ""
 
   if (-not (Get-Command node -ErrorAction SilentlyContinue)) {

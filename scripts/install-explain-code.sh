@@ -84,7 +84,8 @@ printf 'Environment before publishing:\n'
 printf '  export EXPLAIN_CODE_API_TOKEN="expc_live_..."\n'
 printf 'Optional:\n'
 printf '  export EXPLAIN_CODE_API_URL="http://localhost:4000/api"\n'
-printf '  export EXPLAIN_CODE_GROUP_KEY="coin-trade"\n\n'
+printf 'Group selection:\n'
+printf '  Codex and Claude Code will list existing groups and choose or create the group automatically.\n\n'
 
 if ! command -v node >/dev/null 2>&1; then
   printf 'Warning: Node.js was not found in PATH. Install Node.js before publishing learning episodes.\n' >&2

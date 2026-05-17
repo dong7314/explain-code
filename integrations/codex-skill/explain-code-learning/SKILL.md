@@ -19,7 +19,6 @@ Optional:
 
 ```bash
 EXPLAIN_CODE_API_URL=http://localhost:4000/api
-EXPLAIN_CODE_GROUP_KEY=coin-trade
 EXPLAIN_CODE_PROJECT_NAME="Real-time coin trading dashboard"
 ```
 
@@ -44,9 +43,9 @@ node ~/.explain-code/tools/explain-code-ingest/publish.mjs
 1. Inspect the recent code change or the files the user wants to explain.
 2. List existing Explain Code groups with the publisher tool and `--list-groups`.
 3. Choose `groupKey`:
-   - If `EXPLAIN_CODE_GROUP_KEY` is set, use it.
-   - Otherwise, reuse the exact `id` of a matching existing group.
+   - Reuse the exact `id` of a matching existing group.
    - If no group matches, infer a stable slug from package name, git remote, or current directory, and include `projectName` so the backend creates the group.
+   - Only use `EXPLAIN_CODE_GROUP_KEY` when the user explicitly wants to force a specific group.
 4. Build a JSON payload following `tools/explain-code-ingest/payload-schema.md` when that file exists.
 5. Prefer several `codeSnippets` over one long snippet. Each snippet needs `title`, `language`, `code`, and `description`.
 6. Write detailed `syntaxNotes` for framework, library, and language concepts used by the snippets.

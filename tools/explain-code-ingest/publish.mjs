@@ -12,7 +12,7 @@ const usage = `Usage:
 Environment:
   EXPLAIN_CODE_API_URL       Default: http://localhost:4000/api
   EXPLAIN_CODE_API_TOKEN     Required unless --dry-run
-  EXPLAIN_CODE_GROUP_KEY     Optional default/override for payload.groupKey
+  EXPLAIN_CODE_GROUP_KEY     Advanced override for payload.groupKey
   EXPLAIN_CODE_PROJECT_NAME  Optional default for payload.projectName
   EXPLAIN_CODE_CREATED_BY    Optional default: api
 `;

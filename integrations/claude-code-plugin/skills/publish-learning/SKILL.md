@@ -18,7 +18,6 @@ Optional:
 
 ```bash
 EXPLAIN_CODE_API_URL=http://localhost:4000/api
-EXPLAIN_CODE_GROUP_KEY=coin-trade
 EXPLAIN_CODE_PROJECT_NAME="Real-time coin trading dashboard"
 ```
 
@@ -44,9 +43,9 @@ explain-code-publish.mjs --list-groups
 ```
 
 3. Choose `groupKey`:
-   - Use `EXPLAIN_CODE_GROUP_KEY` when it is set.
    - Reuse the exact `id` of a matching existing group when found.
    - If no group matches, infer a stable slug from package name, git remote, or current directory, and include `projectName` so the backend creates the group.
+   - Only use `EXPLAIN_CODE_GROUP_KEY` when the user explicitly wants to force a specific group.
 4. Create a payload for `POST /api/ingest/episodes`.
 5. Use `createdBy: "claude"`.
 6. Prefer multiple important code snippets with explanations over one large code dump.

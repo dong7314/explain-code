@@ -34,8 +34,11 @@ Optional overrides:
 
 ```powershell
 $env:EXPLAIN_CODE_API_URL="http://localhost:4000/api"
-$env:EXPLAIN_CODE_GROUP_KEY="coin-trade"
 ```
+
+Codex and Claude Code choose the learning group automatically. They list
+existing groups, reuse a matching group when one exists, and create a new group
+when needed.
 
 Codex needs a restart after installing the skill.
 
