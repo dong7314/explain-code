@@ -545,22 +545,26 @@ const aiClientInstallCommands = [
 }>;
 const tokenSetupCommands = [
   {
-    command: '$env:EXPLAIN_CODE_API_URL="http://localhost:4000/api"',
+    command:
+      '[Environment]::SetEnvironmentVariable("EXPLAIN_CODE_API_URL", "https://explain.ldy-studio.com/api", "User"); $env:EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"',
     label: "Windows API URL",
     platform: "windows",
   },
   {
-    command: '$env:EXPLAIN_CODE_API_TOKEN="expc_live_..."',
+    command:
+      '[Environment]::SetEnvironmentVariable("EXPLAIN_CODE_API_TOKEN", <토큰 값>", "User"); $env:EXPLAIN_CODE_API_TOKEN="<토큰 값>"',
     label: "Windows token",
     platform: "windows",
   },
   {
-    command: 'export EXPLAIN_CODE_API_URL="http://localhost:4000/api"',
+    command:
+      "grep -qxF 'export EXPLAIN_CODE_API_URL=\"https://explain.ldy-studio.com/api\"' ~/.zshrc || echo 'export EXPLAIN_CODE_API_URL=\"https://explain.ldy-studio.com/api\"' >> ~/.zshrc; source ~/.zshrc",
     label: "macOS/Linux API URL",
     platform: "mac",
   },
   {
-    command: 'export EXPLAIN_CODE_API_TOKEN="expc_live_..."',
+    command:
+      "grep -qxF 'export EXPLAIN_CODE_API_TOKEN=\"<토큰 값>\"' ~/.zshrc || echo 'export EXPLAIN_CODE_API_TOKEN=\"<토큰 값>\"' >> ~/.zshrc; source ~/.zshrc",
     label: "macOS/Linux token",
     platform: "mac",
   },
@@ -576,7 +580,19 @@ const connectorCopy = {
     description:
       "설치 스크립트가 Codex skill과 공용 publisher를 사용자 홈에 배치합니다. 설치 후 Codex를 재시작하면 바로 사용할 수 있습니다.",
     installCommands: aiClientInstallCommands,
-    nextCommands: tokenSetupCommands,
+    nextCommands: [
+      ...tokenSetupCommands,
+      {
+        command: "/explaincodelearning",
+        label: "Codex 안에서",
+        platform: "windows",
+      },
+      {
+        command: "/explaincodelearning",
+        label: "Codex 안에서",
+        platform: "mac",
+      },
+    ],
     nextTitle: "토큰 설정",
     payload: `{
   "groupKey": "coin-trade",
@@ -2000,9 +2016,13 @@ function App() {
   }, [notificationsOpen]);
 
   useEffect(() => {
-    if (!globalSearchOpen) return;
+    if (!globalSearchOpen) return undefined;
 
-    void refreshPopularSearchTerms();
+    const timeout = window.setTimeout(() => {
+      void refreshPopularSearchTerms();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [globalSearchOpen, refreshPopularSearchTerms]);
 
   useEffect(() => {
@@ -2833,7 +2853,7 @@ function App() {
                       <span className="repo-icon">
                         <Star size={14} aria-hidden="true" />
                       </span>
-                      <span>
+                      <span className="repo-copy">
                         <strong>{group.name}</strong>
                         <small>{group.framework}</small>
                       </span>
@@ -2882,7 +2902,7 @@ function App() {
                       <span className="repo-icon">
                         <GitBranch size={14} aria-hidden="true" />
                       </span>
-                      <span>
+                      <span className="repo-copy">
                         <strong>{group.name}</strong>
                         <small>{group.framework}</small>
                       </span>

@@ -484,15 +484,15 @@ git push origin master
 Windows PowerShell:
 
 ```powershell
-$env:EXPLAIN_CODE_API_URL="https://your-domain.example.com/api"
-$env:EXPLAIN_CODE_API_TOKEN="expc_live_..."
+[Environment]::SetEnvironmentVariable("EXPLAIN_CODE_API_URL", "https://explain.ldy-studio.com/api", "User"); $env:EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"
+[Environment]::SetEnvironmentVariable("EXPLAIN_CODE_API_TOKEN", "expc_live_...", "User"); $env:EXPLAIN_CODE_API_TOKEN="expc_live_..."
 ```
 
 macOS/Linux:
 
 ```bash
-export EXPLAIN_CODE_API_URL="https://your-domain.example.com/api"
-export EXPLAIN_CODE_API_TOKEN="expc_live_..."
+grep -qxF 'export EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"' ~/.zshrc || echo 'export EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"' >> ~/.zshrc; source ~/.zshrc
+grep -qxF 'export EXPLAIN_CODE_API_TOKEN="expc_live_..."' ~/.zshrc || echo 'export EXPLAIN_CODE_API_TOKEN="expc_live_..."' >> ~/.zshrc; source ~/.zshrc
 ```
 
 로컬 backend를 사용할 경우 API URL 기본값은 `http://localhost:4000/api`입니다.

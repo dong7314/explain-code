@@ -10,7 +10,7 @@ const usage = `Usage:
   cat payload.json | node tools/explain-code-ingest/publish.mjs --stdin
 
 Environment:
-  EXPLAIN_CODE_API_URL       Default: http://localhost:4000/api
+  EXPLAIN_CODE_API_URL       Default: https://explain.ldy-studio.com/api
   EXPLAIN_CODE_API_TOKEN     Required unless --dry-run
   EXPLAIN_CODE_GROUP_KEY     Advanced override for payload.groupKey
   EXPLAIN_CODE_PROJECT_NAME  Optional default for payload.projectName
@@ -98,7 +98,7 @@ const normalizePayload = (raw) => {
 };
 
 const requestUrl = (path = "/ingest/episodes") => {
-  const base = (process.env.EXPLAIN_CODE_API_URL || "http://localhost:4000/api")
+  const base = (process.env.EXPLAIN_CODE_API_URL || "https://explain.ldy-studio.com/api")
     .trim()
     .replace(/\/+$/, "");
 

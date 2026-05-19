@@ -1,4 +1,5 @@
 .DS_Store
+.explain-code
 node_modules/
 dist/
 .env

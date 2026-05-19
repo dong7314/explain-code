@@ -8,16 +8,16 @@ Create and publish an Explain Code learning episode from the current implementat
 
 ## Environment
 
-Required before publishing:
+Required before publishing. Prefer writing it to your shell profile so Claude Code and new terminals can read it:
 
 ```bash
-EXPLAIN_CODE_API_TOKEN=expc_live_...
+grep -qxF 'export EXPLAIN_CODE_API_TOKEN="expc_live_..."' ~/.zshrc || echo 'export EXPLAIN_CODE_API_TOKEN="expc_live_..."' >> ~/.zshrc; source ~/.zshrc
 ```
 
 Optional:
 
 ```bash
-EXPLAIN_CODE_API_URL=http://localhost:4000/api
+grep -qxF 'export EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"' ~/.zshrc || echo 'export EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"' >> ~/.zshrc; source ~/.zshrc
 EXPLAIN_CODE_PROJECT_NAME="Real-time coin trading dashboard"
 ```
 

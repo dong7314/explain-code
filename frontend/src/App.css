@@ -1434,7 +1434,10 @@ a.footer-info-row:hover strong {
 }
 
 .side-card {
+  min-width: 0;
+  max-width: 100%;
   padding: 15px;
+  overflow: hidden;
 }
 
 .side-card-title {
@@ -1457,13 +1460,19 @@ a.footer-info-row:hover strong {
 }
 
 .repo-list {
+  min-width: 0;
   display: grid;
   gap: 8px;
 }
 
 .repo-item {
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   gap: 8px;
+  align-items: center;
   padding: 9px;
   color: #111827;
   background: #ffffff;
@@ -1484,9 +1493,10 @@ a.footer-info-row:hover strong {
   border-radius: 7px;
 }
 
-.repo-item span:nth-child(2) {
+.repo-copy {
   min-width: 0;
-  flex: 1;
+  display: block;
+  overflow: hidden;
 }
 
 .repo-item strong,
@@ -1508,6 +1518,7 @@ a.footer-info-row:hover strong {
 }
 
 .repo-item em {
+  min-width: max-content;
   color: #2563eb;
   font-size: 13px;
   font-style: normal;
@@ -2551,6 +2562,8 @@ a.footer-info-row:hover strong {
 }
 
 .markdown-page {
+  min-width: 0;
+  width: 100%;
   max-width: 780px;
   display: grid;
   gap: 18px;
@@ -2574,10 +2587,13 @@ a.footer-info-row:hover strong {
 }
 
 .markdown-page p {
+  min-width: 0;
   margin: 0;
   color: #374151;
   font-size: 15px;
   line-height: 1.85;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .md-lead {
@@ -2588,6 +2604,7 @@ a.footer-info-row:hover strong {
 }
 
 .md-callout {
+  min-width: 0;
   display: flex;
   gap: 12px;
   padding: 14px;
@@ -2613,9 +2630,12 @@ a.footer-info-row:hover strong {
 }
 
 .md-callout span {
+  min-width: 0;
   color: #1e40af;
   font-size: 13px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .md-steps {
@@ -2629,6 +2649,7 @@ a.footer-info-row:hover strong {
 
 .md-steps li {
   position: relative;
+  min-width: 0;
   padding: 12px 12px 12px 46px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -2654,7 +2675,10 @@ a.footer-info-row:hover strong {
 
 .md-steps strong,
 .md-steps span {
+  min-width: 0;
   display: block;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .md-steps strong {
@@ -2762,6 +2786,7 @@ a.footer-info-row:hover strong {
 }
 
 .md-code-block {
+  min-width: 0;
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -2805,9 +2830,12 @@ a.footer-info-row:hover strong {
 }
 
 .md-code-description {
+  min-width: 0;
   color: #4b5563;
   font-size: 14px;
   line-height: 1.75;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .md-code {
@@ -2851,10 +2879,13 @@ a.footer-info-row:hover strong {
 }
 
 .md-rendered {
+  min-width: 0;
+  max-width: 100%;
   padding: 14px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  overflow: hidden;
 }
 
 .md-rendered-heading {
@@ -2868,6 +2899,8 @@ a.footer-info-row:hover strong {
 }
 
 .md-rendered-list {
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 7px;
   margin: 0;
@@ -2875,15 +2908,33 @@ a.footer-info-row:hover strong {
   color: #374151;
   font-size: 14px;
   line-height: 1.7;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.md-rendered-list li {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.md-rendered a,
+.md-rendered-list a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .markdown-page blockquote {
+  min-width: 0;
   margin: 0;
   padding: 2px 0 2px 16px;
   color: #4b5563;
   border-left: 4px solid #bfdbfe;
   font-size: 15px;
   line-height: 1.8;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .learning-series {

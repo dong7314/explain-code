@@ -81,9 +81,9 @@ printf '    %s\n' "$LAUNCHER"
 printf '  Then run:\n'
 printf '    /explain-code:publish-learning\n\n'
 printf 'Environment before publishing:\n'
-printf '  export EXPLAIN_CODE_API_TOKEN="expc_live_..."\n'
+printf '  grep -qxF '\''export EXPLAIN_CODE_API_TOKEN="expc_live_..."'\'' ~/.zshrc || echo '\''export EXPLAIN_CODE_API_TOKEN="expc_live_..."'\'' >> ~/.zshrc; source ~/.zshrc\n'
 printf 'Optional:\n'
-printf '  export EXPLAIN_CODE_API_URL="http://localhost:4000/api"\n'
+printf '  grep -qxF '\''export EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"'\'' ~/.zshrc || echo '\''export EXPLAIN_CODE_API_URL="https://explain.ldy-studio.com/api"'\'' >> ~/.zshrc; source ~/.zshrc\n'
 printf 'Group selection:\n'
 printf '  Codex and Claude Code will list existing groups and choose or create the group automatically.\n\n'
 

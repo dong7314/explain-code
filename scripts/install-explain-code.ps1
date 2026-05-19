@@ -117,9 +117,9 @@ exit `$LASTEXITCODE
 
   Write-Host "Environment:"
   Write-Host "  Required before publishing:"
-  Write-Host "    `$env:EXPLAIN_CODE_API_TOKEN = `"expc_live_...`""
+  Write-Host "    [Environment]::SetEnvironmentVariable(`"EXPLAIN_CODE_API_TOKEN`", `"expc_live_...`", `"User`"); `$env:EXPLAIN_CODE_API_TOKEN = `"expc_live_...`""
   Write-Host "  Optional:"
-  Write-Host "    `$env:EXPLAIN_CODE_API_URL = `"http://localhost:4000/api`""
+  Write-Host "    [Environment]::SetEnvironmentVariable(`"EXPLAIN_CODE_API_URL`", `"https://explain.ldy-studio.com/api`", `"User`"); `$env:EXPLAIN_CODE_API_URL = `"https://explain.ldy-studio.com/api`""
   Write-Host "  Group selection:"
   Write-Host "    Codex and Claude Code will list existing groups and choose or create the group automatically."
   Write-Host ""
